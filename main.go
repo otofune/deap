@@ -36,7 +36,7 @@ func main() {
 
 	for _, item := range list {
 		// TODO: accept images/ from arg or env
-		fp := "images/" + fmt.Sprintf("%s-%d.%s", item.GameName, item.LastPlayDate, filepath.Ext(item.FilePath))
+		fp := "images/" + fmt.Sprintf("%s-%d%s", item.GameName, item.LastPlayDate, filepath.Ext(item.FilePath))
 		if _, err := os.Open(fp); !os.IsNotExist(err) {
 			if err != nil {
 				fmt.Printf("%s\n", err)
