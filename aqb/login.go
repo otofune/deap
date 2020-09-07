@@ -3,13 +3,8 @@ package aqb
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"net/url"
-	"strings"
 )
-
-const urlEncodedType = "application/x-www-form-urlencoded"
 
 // Login issues session
 func (c *Client) Login(username, password string) error {
@@ -18,32 +13,19 @@ func (c *Client) Login(username, password string) error {
 	form.Add("username", username)
 	form.Add("password", password)
 
-	body := strings.NewReader(form.Encode())
-
-	req, err := http.NewRequest("POST", aqbOrigin+"/aqb/user/login.php", body)
+	buf, err := c.postForm("/aqb/user/login.php", form)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	res, err := c.Do(req)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-
-	bodyBuf, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("%s\n", bodyBuf)
-	var bdy common
-	if err := json.Unmarshal(bodyBuf, &bdy); err != nil {
+	fmt.Printf("%s\n", buf)
+	var body common
+	if err := json.Unmarshal(*buf, &body); err != nil {
 		return err
 	}
 
-	if !bdy.IsSuccess {
-		return fmt.Errorf("server returns error: %s", bdy.Message)
+	if !body.IsSuccess {
+		return fmt.Errorf("server returns error: %s", body.Message)
 	}
 
 	return nil
@@ -53,29 +35,17 @@ func (c *Client) Login(username, password string) error {
 func (c *Client) CheckSession() (bool, error) {
 	form := url.Values{}
 	form.Add("format", "json")
-	body := strings.NewReader(form.Encode())
 
-	req, err := http.NewRequest("POST", aqbOrigin+"/aqb/user/checkSession.php", body)
+	buf, err := c.postForm("/aqb/user/checkSession.php", form)
 	if err != nil {
 		return false, err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	fmt.Printf("%s\n", buf)
 
-	res, err := c.Do(req)
-	if err != nil {
-		return false, err
-	}
-	defer res.Body.Close()
-
-	bodyBuf, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		return false, err
-	}
-	fmt.Printf("%s\n", bodyBuf)
-	var bdy common
-	if err := json.Unmarshal(bodyBuf, &bdy); err != nil {
+	var body common
+	if err := json.Unmarshal(*buf, &body); err != nil {
 		return false, err
 	}
 
-	return bdy.IsSuccess, nil
+	return body.IsSuccess, nil
 }

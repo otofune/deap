@@ -2,7 +2,6 @@ package aqb
 
 import (
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
@@ -13,6 +12,9 @@ import (
 const (
 	aqbOrigin            = "https://aqb.s.konaminet.jp"
 	persistentCookieName = "aqblog"
+	eamLinkIOSVersion    = "3.5.2.59"
+	apiUserAgent         = "jp.konami.eam.link (iPhone12,8; iOS 13.6.1; in-app; 20; app-version; " + eamLinkIOSVersion + ")"
+	storageUserAgent     = "eAMUSEMENT/59 CFNetwork/1128.0.1 Darwin/19.6.0"
 )
 
 // Client interact with aqb server
@@ -28,62 +30,60 @@ type common struct {
 	Message string
 }
 
-// NewClient establish
+type uaRoundTripper struct {
+	rt http.RoundTripper
+}
+
+func (ur *uaRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
+	r.Header.Set("User-Agent", apiUserAgent)
+
+	if r.URL.Path == "/aqb/blog/post/webdav/detail.php" {
+		r.Header.Set("User-Agent", storageUserAgent)
+	}
+
+	fmt.Printf("[request] %s\n", r.URL)
+
+	return ur.rt.RoundTrip(r)
+}
+
+// NewClient build new Client
 func NewClient() (Client, error) {
 	jar, err := cookiejar.New(&cookiejar.Options{})
 	if err != nil {
 		return Client{}, err
 	}
-	return Client{Client: &http.Client{Jar: jar}}, nil
+
+	t := &uaRoundTripper{rt: http.DefaultTransport}
+	return Client{Client: &http.Client{Jar: jar, Transport: t}}, nil
 }
 
-// GetSession returns io.Reader that includes information to recovery session.
-// Internally returns value of aqblog= cookie currently.
-// That cookie is the only persistent cookie returned from server.
-func (c *Client) GetSession() (io.Reader, error) {
-	u, err := url.Parse(aqbOrigin)
+func (c *Client) postForm(path string, form url.Values) (*[]byte, error) {
+	body := strings.NewReader(form.Encode())
+
+	req, err := http.NewRequest("POST", aqbOrigin+path, body)
 	if err != nil {
-		return strings.NewReader(""), fmt.Errorf("unexpected error happened, must be unreachable: %w", err)
+		return nil, err
 	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 
-	cookies := c.Jar.Cookies(u)
-	for _, cookie := range cookies {
-		if cookie.Name == persistentCookieName {
-			return strings.NewReader(cookie.Value), nil
-		}
-	}
-
-	fmt.Println("[GetSession] No " + persistentCookieName)
-	return strings.NewReader(""), nil
-}
-
-// RestoreSession recovery session from GetSession return value.
-func (c *Client) RestoreSession(r io.Reader) error {
-	b, err := ioutil.ReadAll(r)
+	res, err := c.Do(req)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	str := string(b)
-	if str == "" {
-		return nil
-	}
+	defer res.Body.Close()
 
-	u, err := url.Parse(aqbOrigin)
+	buf, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return fmt.Errorf("unexpected error happened, must be unreachable: %w", err)
+		return nil, err
 	}
 
-	cookie := http.Cookie{
-		Name:  persistentCookieName,
-		Value: str,
-		// same as server returns
-		MaxAge:   60 * 60 * 24 * 300,
-		Domain:   u.Host,
-		Path:     "/",
-		Secure:   true,
-		HttpOnly: true,
-	}
-	c.Jar.SetCookies(u, []*http.Cookie{&cookie})
+	fmt.Printf("[postForm] %s(%d): %s\n", path, res.StatusCode, buf)
+	fmt.Printf("\treq header: %#v\n", res.Request.Header)
+	fmt.Printf("\tres header: %#v\n", res.Header)
 
-	return nil
+	if res.StatusCode >= 400 {
+		return nil, fmt.Errorf("Server returns error status code(%d): %s", res.StatusCode, buf)
+	}
+
+	return &buf, nil
 }
