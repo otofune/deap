@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strings"
 
-	aqbContext "github.com/otofune/automate-eamusement-playshare/aqb/context"
+	"github.com/otofune/automate-eamusement-playshare/aqb/aqbctx"
 )
 
 const (
@@ -40,7 +40,7 @@ type uaRoundTripper struct {
 }
 
 func (ur *uaRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
-	logger := aqbContext.Logger(ur.ctx).WithServiceName("request")
+	logger := aqbctx.Logger(ur.ctx).WithServiceName("request")
 
 	r.Header.Set("User-Agent", apiUserAgent)
 
@@ -55,7 +55,7 @@ func (ur *uaRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 
 // NewClient build new Client
 func NewClient(ctx context.Context) (Client, error) {
-	ctx = aqbContext.WithLogger(ctx, aqbContext.Logger(ctx).WithServiceName("aqb"))
+	ctx = aqbctx.WithLogger(ctx, aqbctx.Logger(ctx).WithServiceName("aqb"))
 
 	jar, err := cookiejar.New(&cookiejar.Options{})
 	if err != nil {
@@ -67,7 +67,7 @@ func NewClient(ctx context.Context) (Client, error) {
 }
 
 func (c *Client) postForm(path string, form url.Values) (*[]byte, error) {
-	logger := aqbContext.Logger(c.ctx).WithServiceName("postForm")
+	logger := aqbctx.Logger(c.ctx).WithServiceName("postForm")
 
 	body := strings.NewReader(form.Encode())
 
