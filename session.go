@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 
-	"github.com/otofune/automate-eamusement-playshare/aqb"
-	"github.com/otofune/automate-eamusement-playshare/aqb/aqbctx"
+	"github.com/otofune/deap/aqb"
+	"github.com/otofune/deap/aqb/aqbctx"
 )
 
 func checkSessionOrLogin(ctx context.Context, client *aqb.Client, username, password string) error {

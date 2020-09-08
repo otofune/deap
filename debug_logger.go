@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/otofune/automate-eamusement-playshare/aqb/logger"
+	"github.com/otofune/deap/aqb/logger"
 )
 
 // debugLogger implements aqb/logger.Logger

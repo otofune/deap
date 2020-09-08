@@ -3,7 +3,7 @@ package aqbctx
 import (
 	"context"
 
-	"github.com/otofune/automate-eamusement-playshare/aqb/logger"
+	"github.com/otofune/deap/aqb/logger"
 )
 
 type loggerKey struct{}

@@ -10,8 +10,8 @@ import (
 
 	"github.com/akamensky/argparse"
 	"github.com/kelseyhightower/envconfig"
-	"github.com/otofune/automate-eamusement-playshare/aqb"
-	"github.com/otofune/automate-eamusement-playshare/aqb/aqbctx"
+	"github.com/otofune/deap/aqb"
+	"github.com/otofune/deap/aqb/aqbctx"
 )
 
 type config struct {
@@ -31,7 +31,7 @@ const (
 // If required, main loads & save state too.
 func main() {
 	var c config
-	envconfig.MustProcess("AEAP", &c)
+	envconfig.MustProcess("DEAP", &c)
 
 	commandName := filepath.Base(os.Args[0])
 

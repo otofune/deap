@@ -1,4 +1,4 @@
-automate-eamusement-playshare
+deap: *D*ownload *e-A*MUSEMENT *P*layShare
 ===
 
 "e-amusementアプリ" のプレイシェアを機械的に取得します
@@ -7,12 +7,12 @@ Usage
 ---
 
 ```sh
-export AEAP_USERNAME=username
-export AEAP_PASSWORD=password
-aeap
+export DEAP_USERNAME=username
+export DEAP_PASSWORD=password
+deap
 ```
 
-詳しくは `aeap --help` を参照してください
+詳しくは `deap --help` を参照してください
 
 LICENSE
 ---

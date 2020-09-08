@@ -9,7 +9,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/otofune/automate-eamusement-playshare/aqb/aqbctx"
+	"github.com/otofune/deap/aqb/aqbctx"
 )
 
 const (

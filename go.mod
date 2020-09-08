@@ -1,4 +1,4 @@
-module github.com/otofune/automate-eamusement-playshare
+module github.com/otofune/deap
 
 go 1.14
 
