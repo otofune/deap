@@ -1,14 +1,15 @@
 package main
 
 import (
-	"fmt"
+	"context"
 	"io"
 	"os"
 
 	"github.com/otofune/automate-eamusement-playshare/aqb"
+	aqbContext "github.com/otofune/automate-eamusement-playshare/aqb/context"
 )
 
-func loginAndSaveSession(conf config, client *aqb.Client) error {
+func loginAndSaveSession(ctx context.Context, conf config, client *aqb.Client) error {
 	if err := client.Login(conf.Username, conf.Password); err != nil {
 		return err
 	}
@@ -16,7 +17,7 @@ func loginAndSaveSession(conf config, client *aqb.Client) error {
 	if err != nil {
 		return err
 	}
-	w, err := os.OpenFile(conf.SessionFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
+	w, err := os.OpenFile(conf.StateFile, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0o644)
 	if err != nil {
 		return err
 	}
@@ -26,21 +27,36 @@ func loginAndSaveSession(conf config, client *aqb.Client) error {
 	return nil
 }
 
-func restoreOrLogin(conf config, client *aqb.Client) error {
-	f, err := os.Open(conf.SessionFile)
+func restoreOrLogin(ctx context.Context, conf config, client *aqb.Client) error {
+	logger := aqbContext.Logger(ctx).WithServiceName("restoreOrLogin")
+
+	f, err := os.Open(conf.StateFile)
 	if err != nil && !os.IsNotExist(err) {
 		return err
 	}
 
-	// try to restore
+	// try to login
 	if err == nil {
-		fmt.Println("[restoreOrLogin] restores")
+		logger.Debugf("restores state from state file\n")
 		defer f.Close()
-		return client.RestoreSession(f)
+
+		if err := client.RestoreSession(f); err != nil {
+			return err
+		}
+
+		ok, err := client.CheckSession()
+		if err != nil {
+			return err
+		}
+		if ok {
+			return nil
+		}
+
+		logger.Debugf("checkSession failed, try to login\n")
 	}
 
 	// try to login
-	if err := loginAndSaveSession(conf, client); err != nil {
+	if err := loginAndSaveSession(ctx, conf, client); err != nil {
 		return err
 	}
 

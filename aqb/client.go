@@ -1,12 +1,15 @@
 package aqb
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"strings"
+
+	aqbContext "github.com/otofune/automate-eamusement-playshare/aqb/context"
 )
 
 const (
@@ -20,6 +23,7 @@ const (
 // Client interact with aqb server
 type Client struct {
 	*http.Client
+	ctx context.Context
 }
 
 type common struct {
@@ -31,33 +35,40 @@ type common struct {
 }
 
 type uaRoundTripper struct {
-	rt http.RoundTripper
+	rt  http.RoundTripper
+	ctx context.Context
 }
 
 func (ur *uaRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
+	logger := aqbContext.Logger(ur.ctx).WithServiceName("request")
+
 	r.Header.Set("User-Agent", apiUserAgent)
 
 	if r.URL.Path == "/aqb/blog/post/webdav/detail.php" {
 		r.Header.Set("User-Agent", storageUserAgent)
 	}
 
-	fmt.Printf("[request] %s\n", r.URL)
+	logger.Debugf("%s %s\n", r.Method, r.URL)
 
 	return ur.rt.RoundTrip(r)
 }
 
 // NewClient build new Client
-func NewClient() (Client, error) {
+func NewClient(ctx context.Context) (Client, error) {
+	ctx = aqbContext.WithLogger(ctx, aqbContext.Logger(ctx).WithServiceName("aqb"))
+
 	jar, err := cookiejar.New(&cookiejar.Options{})
 	if err != nil {
 		return Client{}, err
 	}
 
-	t := &uaRoundTripper{rt: http.DefaultTransport}
-	return Client{Client: &http.Client{Jar: jar, Transport: t}}, nil
+	t := &uaRoundTripper{rt: http.DefaultTransport, ctx: ctx}
+	return Client{ctx: ctx, Client: &http.Client{Jar: jar, Transport: t}}, nil
 }
 
 func (c *Client) postForm(path string, form url.Values) (*[]byte, error) {
+	logger := aqbContext.Logger(c.ctx).WithServiceName("postForm")
+
 	body := strings.NewReader(form.Encode())
 
 	req, err := http.NewRequest("POST", aqbOrigin+path, body)
@@ -77,9 +88,9 @@ func (c *Client) postForm(path string, form url.Values) (*[]byte, error) {
 		return nil, err
 	}
 
-	fmt.Printf("[postForm] %s(%d): %s\n", path, res.StatusCode, buf)
-	fmt.Printf("\treq header: %#v\n", res.Request.Header)
-	fmt.Printf("\tres header: %#v\n", res.Header)
+	logger.Debugf("%s(%d): %s\n", path, res.StatusCode, buf)
+	logger.Debugf("\treq header: %#v\n", res.Request.Header)
+	logger.Debugf("\tres header: %#v\n", res.Header)
 
 	if res.StatusCode >= 400 {
 		return nil, fmt.Errorf("Server returns error status code(%d): %s", res.StatusCode, buf)

@@ -18,7 +18,6 @@ func (c *Client) Login(username, password string) error {
 		return err
 	}
 
-	fmt.Printf("%s\n", buf)
 	var body common
 	if err := json.Unmarshal(*buf, &body); err != nil {
 		return err
@@ -40,7 +39,6 @@ func (c *Client) CheckSession() (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	fmt.Printf("%s\n", buf)
 
 	var body common
 	if err := json.Unmarshal(*buf, &body); err != nil {
