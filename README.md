@@ -3,6 +3,7 @@ deap: *D*ownload *e-A*MUSEMENT *P*layShare
 
 Download play share images from e-AMUSEMENT app server
 
+
 Install
 ---
 ```
@@ -13,6 +14,8 @@ Usage
 ---
 
 DEAP downloads all play share images from e-AMUSEMENT app server, then prints downloaded paths to stdout.
+
+![](./docs/cmd.png)
 
 ```sh
 export DEAP_USERNAME=username
