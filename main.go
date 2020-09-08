@@ -35,7 +35,7 @@ func main() {
 
 	commandName := filepath.Base(os.Args[0])
 
-	parser := argparse.NewParser(commandName, "Download all playshare images from e-AMUSEMENT app server, and then print downloaded path to stdout")
+	parser := argparse.NewParser(commandName, "Download all play share images from e-AMUSEMENT app server, then print downloaded path to stdout")
 	stateFile := parser.String("s", "state-file", &argparse.Options{
 		Help:    fmt.Sprintf("%s will be save state to, such as session cookie", commandName),
 		Default: defaultStateFile,
@@ -45,7 +45,6 @@ func main() {
 		Default: defaultDownloadDirectory,
 	})
 	debugEnabled := parser.Flag("", "debug", &argparse.Options{Help: "Show debug output to stderr"})
-	isShowVersion := parser.Flag("v", "version", &argparse.Options{Help: "Show version"})
 
 	if err := parser.Parse(os.Args); err != nil {
 		fmt.Print(parser.Usage(err))
@@ -54,13 +53,6 @@ func main() {
 
 	c.ImagesDirectory = *imagesDirectory
 	c.StateFile = *stateFile
-
-	if *isShowVersion {
-		if err := showVersion(); err != nil {
-			panic(err)
-		}
-		return
-	}
 
 	logger := debugLogger{}
 

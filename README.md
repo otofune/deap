@@ -1,10 +1,18 @@
 deap: *D*ownload *e-A*MUSEMENT *P*layShare
 ===
 
-"e-amusementアプリ" のプレイシェアを機械的に取得します
+Download play share images from e-AMUSEMENT app server
+
+Install
+---
+```
+go get -u github.com/otofune/deap
+```
 
 Usage
 ---
+
+DEAP downloads all play share images from e-AMUSEMENT app server, then prints downloaded paths to stdout.
 
 ```sh
 export DEAP_USERNAME=username
@@ -12,7 +20,7 @@ export DEAP_PASSWORD=password
 deap
 ```
 
-詳しくは `deap --help` を参照してください
+See `deap --help` for more information.
 
 LICENSE
 ---
